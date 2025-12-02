@@ -406,11 +406,9 @@ namespace MudBlazor.Services
                 {
                     popoverOptions.CheckForPopoverProvider = options.PopoverOptions.CheckForPopoverProvider;
                     popoverOptions.ContainerClass = options.PopoverOptions.ContainerClass;
-                    popoverOptions.FlipMargin = options.PopoverOptions.FlipMargin;
                     popoverOptions.QueueDelay = options.PopoverOptions.QueueDelay;
                     popoverOptions.ThrowOnDuplicateProvider = options.PopoverOptions.ThrowOnDuplicateProvider;
                     popoverOptions.Mode = options.PopoverOptions.Mode;
-                    popoverOptions.OverflowPadding = options.PopoverOptions.OverflowPadding;
                 })
                 .AddMudBlazorScrollSpy()
                 .AddMudEventManager()

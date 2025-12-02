@@ -16,9 +16,9 @@ internal class PopoverJsInterop
         _jsRuntime = jsRuntime;
     }
 
-    public ValueTask<bool> Initialize(string containerClass, int flipMargin, int overflowPadding, CancellationToken cancellationToken = default)
+    public ValueTask<bool> Initialize(string containerClass, CancellationToken cancellationToken = default)
     {
-        return _jsRuntime.InvokeVoidAsyncWithErrorHandling("mudPopover.initialize", cancellationToken, containerClass, flipMargin, overflowPadding);
+        return _jsRuntime.InvokeVoidAsyncWithErrorHandling("mudPopover.initialize", cancellationToken, containerClass);
     }
 
     public ValueTask<bool> Connect(Guid id, CancellationToken cancellationToken = default)

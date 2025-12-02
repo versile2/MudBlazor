@@ -115,6 +115,7 @@ internal class PopoverService : IPopoverService, IBatchTimerHandler<MudPopoverHo
             .SetStyle(popover.PopoverStyles)
             .SetShowContent(popover.Open)
             .SetTag(popover.Tag)
+            .SetOverflowPadding(popover.OverflowPadding)
             .SetUserAttributes(popover.UserAttributes);
 
         _holders.TryAdd(holder.Id, holder);
@@ -156,6 +157,7 @@ internal class PopoverService : IPopoverService, IBatchTimerHandler<MudPopoverHo
             .SetStyle(popover.PopoverStyles)
             .SetShowContent(popover.Open)
             .SetTag(popover.Tag)
+            .SetOverflowPadding(popover.OverflowPadding)
             .SetUserAttributes(popover.UserAttributes);
 
         await _observerManager.NotifyAsync(observer => observer.PopoverCollectionUpdatedNotificationAsync(new PopoverHolderContainer(PopoverHolderOperation.Update, new[] { holder }), _cancellationToken));
@@ -327,7 +329,7 @@ internal class PopoverService : IPopoverService, IBatchTimerHandler<MudPopoverHo
                 return;
             }
 
-            await _popoverJsInterop.Initialize(PopoverOptions.ContainerClass, PopoverOptions.FlipMargin, PopoverOptions.OverflowPadding, _cancellationToken);
+            await _popoverJsInterop.Initialize(PopoverOptions.ContainerClass, _cancellationToken);
             // Starts in background
             await _batchExecutor.StartAsync(_cancellationToken);
             IsInitialized = true;

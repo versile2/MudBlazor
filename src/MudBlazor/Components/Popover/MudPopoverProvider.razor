@@ -7,7 +7,11 @@
         @foreach (var handler in PopoverService.ActivePopovers)
         {
             <MudRender @ref="handler.ElementReference" @key="handler.Id">
-                <div id="@($"popovercontent-{handler.Id}")" data-ticks="@(handler.ActivationDate?.Ticks ?? 0)" @attributes="@handler.UserAttributes" class="@handler.Class" style="@handler.Style">
+                <div id="@($"popovercontent-{handler.Id}")" 
+                     data-ticks="@(handler.ActivationDate?.Ticks ?? 0)" 
+                     data-pc-overflowPadding="@handler.OverflowPadding" 
+                     @attributes="@handler.UserAttributes" 
+                     class="@handler.Class" style="@handler.Style">
                     @if (handler.ShowContent)
                     {
                         @handler.Fragment

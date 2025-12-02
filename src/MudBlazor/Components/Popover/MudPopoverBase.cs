@@ -33,9 +33,14 @@ public abstract class MudPopoverBase : MudComponentBase, IPopover, IAsyncDisposa
     /// <inheritdoc />
     string IPopover.PopoverStyles => PopoverStyles;
 
+    /// <inheritdoc />
+    [Parameter]
+    [Category(CategoryTypes.Popover.Behavior)]
+    public int? OverflowPadding { get; set; }
+
     protected internal abstract string PopoverClass { get; }
 
-    protected internal abstract string PopoverStyles { get; }
+    protected internal abstract string PopoverStyles { get; }    
 
     /// <inheritdoc />
     [Parameter]

@@ -5,8 +5,6 @@
 window.mudpopoverHelper = {
     // set by the class MudPopover in initialize
     mainContainerClass: null,
-    overflowPadding: 24,
-    flipMargin: 0,
 
     // used for setting a debounce
     debounce: function (func, wait) {
@@ -276,6 +274,7 @@ window.mudpopoverHelper = {
             const isFlipAlways = classList.contains('mud-popover-overflow-flip-always');
             const zIndexAuto = popoverNodeStyle.getPropertyValue('z-index') === 'auto';
             const classListArray = Array.from(classList);
+            const overflowPadding = popoverContentNode.getAttribute('data-pc-overflowPadding') || 0;
 
             if (isPositionOverride) {
                 const attrY = popoverContentNode.getAttribute('data-pc-y');
@@ -353,12 +352,12 @@ window.mudpopoverHelper = {
 
                     if (classList.contains('mud-popover-top-left')) {
                         // Space available in current direction
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin; // Space below the anchor
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin; // Space to the right of the anchor
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding; // Space below the anchor
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding; // Space to the right of the anchor
 
                         // Space available in opposite direction
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceAbove = anchorY - overflowPadding;
+                        const spaceLeft = anchorX - overflowPadding;
 
                         // Check if popover exceeds available space AND if opposite side has more space
                         const shouldFlipVertical = popoverHeight > spaceBelow && spaceAbove > spaceBelow;
@@ -378,8 +377,8 @@ window.mudpopoverHelper = {
                     // For mud-popover-top-center
                     else if (classList.contains('mud-popover-top-center')) {
                         // Space available in current direction vs opposite direction
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding;
+                        const spaceAbove = anchorY - overflowPadding;
 
                         // Only flip if popover exceeds available space AND there's more space in opposite direction
                         if (popoverHeight > spaceBelow && spaceAbove > spaceBelow) {
@@ -390,12 +389,12 @@ window.mudpopoverHelper = {
                     // For mud-popover-top-right
                     else if (classList.contains('mud-popover-top-right')) {
                         // Space available in current direction
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding;
+                        const spaceLeft = anchorX - overflowPadding;
 
                         // Space available in opposite direction
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceAbove = anchorY - overflowPadding;
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding;
 
                         // Check if popover exceeds available space AND if opposite side has more space
                         const shouldFlipVertical = popoverHeight > spaceBelow && spaceAbove > spaceBelow;
@@ -415,8 +414,8 @@ window.mudpopoverHelper = {
                     // For mud-popover-center-left
                     else if (classList.contains('mud-popover-center-left')) {
                         // Space available in current vs opposite direction
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin;
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding;
+                        const spaceLeft = anchorX - overflowPadding;
 
                         if (popoverWidth > spaceRight && spaceLeft > spaceRight) {
                             selector = 'left';
@@ -426,8 +425,8 @@ window.mudpopoverHelper = {
                     // For mud-popover-center-right
                     else if (classList.contains('mud-popover-center-right')) {
                         // Space available in current vs opposite direction
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceLeft = anchorX - overflowPadding;
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding;
 
                         if (popoverWidth > spaceLeft && spaceRight > spaceLeft) {
                             selector = 'right';
@@ -437,12 +436,12 @@ window.mudpopoverHelper = {
                     // For mud-popover-bottom-left
                     else if (classList.contains('mud-popover-bottom-left')) {
                         // Space available in current direction
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceAbove = anchorY - overflowPadding;
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding;
 
                         // Space available in opposite direction
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding;
+                        const spaceLeft = anchorX - overflowPadding;
 
                         // Check if popover exceeds available space AND if opposite side has more space
                         const shouldFlipVertical = popoverHeight > spaceAbove && spaceBelow > spaceAbove;
@@ -462,8 +461,8 @@ window.mudpopoverHelper = {
                     // For mud-popover-bottom-center
                     else if (classList.contains('mud-popover-bottom-center')) {
                         // Space available in current vs opposite direction
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin;
+                        const spaceAbove = anchorY - overflowPadding;
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding;
 
                         if (popoverHeight > spaceAbove && spaceBelow > spaceAbove) {
                             selector = 'bottom';
@@ -473,12 +472,12 @@ window.mudpopoverHelper = {
                     // For mud-popover-bottom-right
                     else if (classList.contains('mud-popover-bottom-right')) {
                         // Space available in current direction
-                        const spaceAbove = anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceLeft = anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceAbove = anchorY - overflowPadding;
+                        const spaceLeft = anchorX - overflowPadding;
 
                         // Space available in opposite direction
-                        const spaceBelow = window.innerHeight - anchorY - window.mudpopoverHelper.flipMargin;
-                        const spaceRight = window.innerWidth - anchorX - window.mudpopoverHelper.flipMargin;
+                        const spaceBelow = window.innerHeight - anchorY - overflowPadding;
+                        const spaceRight = window.innerWidth - anchorX - overflowPadding;
 
                         // Check if popover exceeds available space AND if opposite side has more space
                         const shouldFlipVertical = popoverHeight > spaceAbove && spaceBelow > spaceAbove;
@@ -517,18 +516,18 @@ window.mudpopoverHelper = {
                 }
 
                 // ensure the left is inside bounds
-                if (left + offsetX < window.mudpopoverHelper.overflowPadding && // it's starting left of the screen
+                if (left + offsetX < overflowPadding && // it's starting left of the screen
                     Math.abs(left + offsetX) < selfRect.width) { // it's not starting so far left the entire box would be hidden
-                    left = window.mudpopoverHelper.overflowPadding;
+                    left = overflowPadding;
                     // set offsetX to 0 to avoid double offset
                     offsetX = 0;
                 }
 
                 // ensure the top is inside bounds
-                if (top + offsetY < window.mudpopoverHelper.overflowPadding && // it's starting above the screen
+                if (top + offsetY < overflowPadding && // it's starting above the screen
                     boundingRect.top >= 0 && // the popoverNode is still on screen
                     Math.abs(top + offsetY) < selfRect.height) { // it's not starting so far above the entire box would be hidden
-                    top = window.mudpopoverHelper.overflowPadding;
+                    top = overflowPadding;
                     // set offsetY to 0 to avoid double offset
                     offsetY = 0;
                 }
@@ -552,7 +551,6 @@ window.mudpopoverHelper = {
                     const checkHeight = isUnset(popoverStyle.maxHeight) && isUnset(listStyle.maxHeight);
 
                     if (checkHeight) {
-                        const overflowPadding = window.mudpopoverHelper.overflowPadding;
                         const isCentered = Array.from(classList).some(cls =>
                             cls.includes('mud-popover-anchor-center')
                         );
@@ -947,7 +945,7 @@ class MudPopover {
         }
     }
 
-    initialize(containerClass, flipMargin, overflowPadding) {
+    initialize(containerClass) {
         // only happens when the PopoverService is created which happens on application start and anytime the service might crash
         // "mud-popover-provider" is the default name of containerClass.
 
@@ -957,11 +955,7 @@ class MudPopover {
         }
         // store options from PopoverOptions in mudpopoverHelper
         window.mudpopoverHelper.mainContainerClass = containerClass;
-        window.mudpopoverHelper.overflowPadding = overflowPadding;
 
-        if (flipMargin) {
-            window.mudpopoverHelper.flipMargin = flipMargin;
-        }
         // create a single observer to watch all popovers in the provider
         this.observeMainContainer();
 

@@ -40,6 +40,9 @@ internal class MudPopoverHolder : IMudPopoverHolder
     public Dictionary<string, object?> UserAttributes { get; set; } = new();
 
     /// <inheritdoc />
+    public int? OverflowPadding { get; internal set; }
+
+    /// <inheritdoc />
     public MudRender? ElementReference { get; set; }
 
     /// <summary>
@@ -127,6 +130,18 @@ internal class MudPopoverHolder : IMudPopoverHolder
     public MudPopoverHolder SetFragment(RenderFragment? renderFragment)
     {
         Fragment = renderFragment;
+
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the Overflow Padding of the popover.
+    /// </summary>
+    /// <param name="overflowPadding">The new <see cref="IMudPopoverHolder.OverflowPadding" /> of the popover.</param>
+    /// <returns>The updated <see cref="MudPopoverHolder"/> instance.</returns>
+    public MudPopoverHolder SetOverflowPadding(int? overflowPadding)
+    {
+        OverflowPadding = overflowPadding;
 
         return this;
     }

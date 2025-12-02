@@ -46,6 +46,16 @@ public interface IPopover
     Dictionary<string, object?> UserAttributes { get; set; }
 
     /// <summary>
+    /// <see cref="OverflowPadding" /> is the amount of pixels a popover can be towards an edge.<br/>
+    /// It is used to determine the minimum number of pixels a Popover can be from any edge. (excluding Tooltips)<br/>
+    /// It is used to calculate whether a Popover should flip when <see cref="MudPopover.OverflowBehavior" /> is set to Flip.
+    /// </summary>
+    /// <remarks>
+    /// Default value is <c>null</c>, or 0.
+    /// </remarks>
+    int? OverflowPadding { get; }
+
+    /// <summary>
     /// The content within this popover.
     /// </summary>
     RenderFragment? ChildContent { get; set; }

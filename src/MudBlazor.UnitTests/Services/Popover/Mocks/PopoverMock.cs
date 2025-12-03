@@ -23,5 +23,7 @@ internal class PopoverMock : IPopover
 
     public Dictionary<string, object?> UserAttributes { get; set; } = new();
 
+    public int? OverflowPadding { get; set; }
+
     public RenderFragment? ChildContent { get; set; }
 }

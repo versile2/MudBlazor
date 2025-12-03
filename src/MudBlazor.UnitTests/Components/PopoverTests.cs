@@ -14,88 +14,9 @@ namespace MudBlazor.UnitTests.Components
         {
             var options = new PopoverOptions();
 
-            options.OverflowPadding.Should().Be(24);
             options.ContainerClass.Should().Be("mud-popover-provider");
-            options.FlipMargin.Should().Be(0);
             options.ThrowOnDuplicateProvider.Should().Be(true);
         }
-
-        //[Test]
-        //[Obsolete]
-        //public async Task MudPopoverHandler_DetachAndUpdateFragmentConcurrent_UpdateFragmentDoesNotRunInTheSameTimeAsDetach()
-        //{
-        //    var connectTcs = new TaskCompletionSource<IJSVoidResult>();
-
-        //    var mock = new Mock<IJSRuntime>();
-        //    var handler = new MudPopoverHandler((tree) => { }, mock.Object, () => { });
-
-        //    mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.IsAny<CancellationToken>(), It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-        //        .ReturnsAsync(Mock.Of<IJSVoidResult>())
-        //        .Verifiable();
-
-        //    mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", It.IsAny<CancellationToken>(), It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-        //        .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-        //        .Verifiable();
-
-
-        //    var comp = Context.RenderComponent<MudBadge>(p =>
-        //    {
-        //        p.Add(x => x.UserAttributes, new Dictionary<string, object> { { "myprop1", "myValue1" } });
-        //        p.Add(x => x.Tag, "my tag");
-
-        //    });
-
-        //    RenderFragment newRenderFragement = (tree) => { };
-        //    await handler.Initialize();
-
-        //    _ = handler.Detach();
-        //    var task2 = handler.UpdateFragmentAsync(newRenderFragement, comp.Instance, "my-new-extra-class", "my-new-extra-style:2px", true);
-
-        //    var completedTask = await Task.WhenAny(Task.Delay(50), task2);
-
-        //    completedTask.Should().NotBe(task2);
-
-        //    mock.Verify();
-        //    mock.VerifyNoOtherCalls();
-        //}
-
-        //[Test]
-        //[Obsolete]
-        //public async Task MudPopoverHandler_DetachAndUpdateFragmentConcurrent_UpdateFragmentAsyncShouldRunAfterDetach()
-        //{
-        //    var connectTcs = new TaskCompletionSource<IJSVoidResult>();
-
-        //    var mock = new Mock<IJSRuntime>();
-        //    var handler = new MudPopoverHandler(_ => { }, mock.Object, () => { });
-
-        //    mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.connect", It.IsAny<CancellationToken>(), It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-        //        .ReturnsAsync(Mock.Of<IJSVoidResult>())
-        //        .Verifiable();
-
-        //    mock.Setup(x => x.InvokeAsync<IJSVoidResult>("mudPopover.disconnect", It.IsAny<CancellationToken>(), It.Is<object[]>(y => y.Length == 1 && (Guid)y[0] == handler.Id)))
-        //        .Returns(new ValueTask<IJSVoidResult>(connectTcs.Task))
-        //        .Verifiable();
-
-
-        //    var comp = Context.RenderComponent<MudBadge>(p =>
-        //    {
-        //        p.Add(x => x.UserAttributes, new Dictionary<string, object> { { "myprop1", "myValue1" } });
-        //        p.Add(x => x.Tag, "my tag");
-
-        //    });
-
-        //    RenderFragment newRenderFragement = (tree) => { };
-        //    await handler.Initialize();
-
-        //    var task1 = handler.Detach();
-        //    var task2 = handler.UpdateFragmentAsync(newRenderFragement, comp.Instance, "my-new-extra-class", "my-new-extra-style:2px", true);
-        //    connectTcs.SetResult(Mock.Of<IJSVoidResult>());
-
-        //    await Task.WhenAll(task1, task2);
-
-        //    mock.Verify();
-        //    mock.VerifyNoOtherCalls();
-        //}
 
         [Test]
         public void MudPopover_DefaultValues()

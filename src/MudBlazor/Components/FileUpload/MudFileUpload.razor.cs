@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using MudBlazor.Interfaces;
 using MudBlazor.Resources;
 using MudBlazor.State;
 using MudBlazor.Utilities;
@@ -16,12 +15,13 @@ namespace MudBlazor
 {
 
     /// <summary>
-    /// A form component for uploading one or more files.  For <c>T</c>, use either <c>IBrowserFile</c> for a single file or <c>IReadOnlyList&lt;IBrowserFile&gt;</c> for multiple files.
+    /// A form component that lets users upload one or more files.
     /// </summary>
-    /// <typeparam name="T">Either <see cref="IBrowserFile"/> for a single file or <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see> for multiple files.</typeparam>
-    public partial class MudFileUpload<T> : MudFormComponent<T, string>, IActivatable
+    /// <typeparam name="T">Use <see cref="IBrowserFile"/> for a single file or <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see> for multiple files.</typeparam>
+    public partial class MudFileUpload<T> : MudFormComponent<T, string>
     {
         private readonly ParameterState<T?> _filesState;
+        private readonly ParameterState<bool> _draggingState;
 
         [Inject]
         private IJSRuntime JsRuntime { get; set; } = null!;
@@ -38,6 +38,9 @@ namespace MudBlazor
             _filesState = registerScope.RegisterParameter<T?>(nameof(Files))
                 .WithParameter(() => Files)
                 .WithEventCallback(() => FilesChanged);
+            _draggingState = registerScope.RegisterParameter<bool>(nameof(Dragging))
+                .WithParameter(() => Dragging)
+                .WithEventCallback(() => DraggingChanged);
         }
 
         private readonly string _id = Identifier.Create();
@@ -48,12 +51,23 @@ namespace MudBlazor
                 .AddClass(Class)
                 .Build();
 
+        protected string DragClass =>
+            new CssBuilder("mud-file-upload-dragarea")
+                .AddClass("mud-file-upload-dragarea-clickable", !GetDisabledState())
+                .AddClass("mud-border-primary", _draggingState.Value)
+                .Build();
+
+        protected string InputClasses =>
+            new CssBuilder(InputClass)
+                .AddClass("mud-file-upload-dragover", DragAndDrop && (Hidden || CustomContent == null))
+                .Build();
+
         /// <summary>
-        /// The uploaded file or files.
+        /// The selected file or files.
         /// </summary>
         /// <remarks>
-        /// When <c>T</c> is <see cref="IBrowserFile" />, a single file is returned.<br />
-        /// When <c>T</c> is <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>, multiple files are returned.
+        /// When <c>T</c> is <see cref="IBrowserFile" />, a single file is provided.<br />
+        /// When <c>T</c> is <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>, multiple files are provided.
         /// </remarks>
         [Parameter, ParameterState]
         [Category(CategoryTypes.FileUpload.Behavior)]
@@ -67,17 +81,27 @@ namespace MudBlazor
         public EventCallback<T?> FilesChanged { get; set; }
 
         /// <summary>
-        /// Occurs when the internal files have changed.
+        /// Occurs when <see cref="Dragging"/> has changed.
         /// </summary>
+        [Parameter]
+        [Category(CategoryTypes.FileUpload.Behavior)]
+        public EventCallback<bool> DraggingChanged { get; set; }
+
+        /// <summary>
+        /// Occurs when the user selects or drops files.
+        /// </summary>
+        /// <remarks>
+        /// Not raised when <see cref="SuppressOnChangeWhenInvalid"/> is <c>true</c> and validation fails.
+        /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Behavior)]
         public EventCallback<InputFileChangeEventArgs> OnFilesChanged { get; set; }
 
         /// <summary>
-        /// Appends additional files to the existing list.
+        /// Appends new files to the existing selection.
         /// </summary>
         /// <remarks>
-        /// Defaults to <c>false</c>. This applies when <c>T</c> is <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>.
+        /// Defaults to <c>false</c>.  This applies when <c>T</c> is <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>.
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Behavior)]
@@ -91,14 +115,27 @@ namespace MudBlazor
         public RenderFragment? ActivatorContent { get; set; }
 
         /// <summary>
-        /// The template used for selected files.
+        /// The custom content used to render the upload UI.
         /// </summary>
+        /// <remarks>
+        /// The context is the current <see cref="MudFileUpload{T}"/> instance and can be used to call <see cref="OpenFilePickerAsync"/>.
+        /// </remarks>
+        [Parameter]
+        [Category(CategoryTypes.FileUpload.Behavior)]
+        public RenderFragment<MudFileUpload<T>>? CustomContent { get; set; }
+
+        /// <summary>
+        /// The template used to render selected files.
+        /// </summary>
+        /// <remarks>
+        /// When <c>null</c>, a default chip list is shown.
+        /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Appearance)]
         public RenderFragment<T?>? SelectedTemplate { get; set; }
 
         /// <summary>
-        /// Prevents raising <see cref="OnFilesChanged"/> if validation fails during an upload.
+        /// Prevents raising <see cref="OnFilesChanged"/> when validation fails during an upload.
         /// </summary>
         /// <remarks>
         /// Defaults to <c>false</c>.
@@ -108,40 +145,60 @@ namespace MudBlazor
         public bool SuppressOnChangeWhenInvalid { get; set; }
 
         /// <summary>
-        /// The accepted file extensions, separated by commas.
+        /// The accepted file types for the file picker.
         /// </summary>
         /// <remarks>
-        /// Defaults to <c>null</c> for any file type.  Multiple file extensions must be separated by commas (e.g. <c>".png, .jpg"</c>).
+        /// Defaults to <c>null</c> for any file type.  Multiple file types must be separated by commas (e.g. <c>".png,.jpg"</c>).
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Behavior)]
         public string? Accept { get; set; }
 
         /// <summary>
-        /// Hides the inner <see cref="InputFile"/> component.
+        /// Hides the internal <see cref="InputFile"/> element.
         /// </summary>
         /// <remarks>
-        /// Defaults to <c>true</c>.  When <c>false</c>, files can be uploaded via drag-and-drop.
+        /// Defaults to <c>true</c>.  When <c>false</c>, the input is visible.
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Appearance)]
         public bool Hidden { get; set; } = true;
 
         /// <summary>
-        /// The CSS classes applied to the internal <see cref="InputFile"/>.
+        /// Enables a drag-and-drop area inside the component.
         /// </summary>
         /// <remarks>
-        /// These styles apply when <see cref="Hidden"/> is <c>false</c>. Multiple classes must be separated by spaces.
+        /// Defaults to <c>false</c>.  During drag operations, the internal <see cref="InputFile"/> element can be shown to capture drop events even when <see cref="Hidden"/> is <c>true</c>.
+        /// </remarks>
+        [Parameter]
+        [Category(CategoryTypes.FileUpload.Behavior)]
+        public bool DragAndDrop { get; set; }
+
+        /// <summary>
+        /// Indicates whether a drag operation is active.
+        /// </summary>
+        /// <remarks>
+        /// When <c>true</c>, the internal <see cref="InputFile"/> element is shown to capture the drop, which temporarily overrides <see cref="Hidden"/>.  When <c>false</c>, visibility follows <see cref="Hidden"/> again.  Drop-related events reset it to <c>false</c>.
+        /// </remarks>
+        [Parameter]
+        [Category(CategoryTypes.FileUpload.Behavior)]
+        public bool Dragging { get; set; }
+
+        /// <summary>
+        /// The CSS classes applied to the internal <see cref="InputFile"/> element.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to <c>null</c>.  These classes apply when <see cref="Hidden"/> is <c>false</c>.  Multiple classes must be separated by spaces.
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Appearance)]
         public string? InputClass { get; set; }
 
         /// <summary>
-        /// The CSS styles applied to the internal <see cref="InputFile"/>.
+        /// The CSS styles applied to the internal <see cref="InputFile"/> element.
         /// </summary>
         /// <remarks>
-        /// These styles apply when <see cref="Hidden"/> is <c>false</c>.
+        /// Defaults to <c>null</c>.  These styles apply when <see cref="Hidden"/> is <c>false</c>.  Prefer <see cref="InputClass"/>.
         /// </remarks>
         [Obsolete("Prefer the InputClass property with CSS https://github.com/MudBlazor/MudBlazor/issues/12047")]
         [Parameter]
@@ -149,27 +206,27 @@ namespace MudBlazor
         public string? InputStyle { get; set; }
 
         /// <summary>
-        /// The maximum number of files retrieved during a call to <see cref="InputFileChangeEventArgs.GetMultipleFiles(int)"/>.
+        /// The maximum number of files retrieved per selection.
         /// </summary>
         /// <remarks>
-        /// Defaults to <c>10</c>.  This property does not limit the total number of uploaded files allowed; a limit should be validated manually, such as during the <see cref="FilesChanged"/> event.
+        /// Defaults to <c>10</c>.  This does not limit the total number of files; enforce overall limits in <see cref="FilesChanged"/>.
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Behavior)]
         public int MaximumFileCount { get; set; } = 10;
 
         /// <summary>
-        /// The maximum file size in bytes.
+        /// The maximum allowed file size in bytes.
         /// </summary>
         /// <remarks>
-        /// Defaults to <c>null</c> (no limit). When a file exceeds this limit, the upload for that file will be prevented.
+        /// Defaults to <c>null</c> (no limit).  Files exceeding this limit are rejected and a validation error is added.
         /// </remarks>
         [Parameter]
         [Category(CategoryTypes.FileUpload.Behavior)]
         public long? MaxFileSize { get; set; }
 
         /// <summary>
-        /// Prevents the user from uploading files.
+        /// Prevents the user from interacting with this component.
         /// </summary>
         /// <remarks>
         /// Defaults to <c>false</c>.
@@ -184,15 +241,102 @@ namespace MudBlazor
         [CascadingParameter(Name = "ParentReadOnly")]
         private bool ParentReadOnly { get; set; }
 
+        /// <summary>
+        /// Returns the filenames for the selected files.
+        /// </summary>
+        /// <remarks>
+        /// When <c>T</c> is <see cref="IBrowserFile" />, a single filename is returned.<br />
+        /// When <c>T</c> is <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>, multiple filenames are returned.
+        /// </remarks>
+        public IReadOnlyList<string> GetFilenames()
+        {
+            if (EqualityComparer<T>.Default.Equals(_filesState.Value, default))
+            {
+                return [];
+            }
+            return _filesState.Value switch
+            {
+                IBrowserFile singleFile => [singleFile.Name],
+                IReadOnlyList<IBrowserFile> fileList => fileList.Select(f => f.Name).ToList(),
+                _ => []
+            };
+        }
+
         protected bool GetDisabledState() => Disabled || ParentDisabled || ParentReadOnly;
+
+        private Task OnDragAreaClickAsync(MouseEventArgs _)
+        {
+            if (GetDisabledState())
+            {
+                return Task.CompletedTask;
+            }
+
+            return OpenFilePickerAsync();
+        }
+
+        private Task OnDragEnterAsync(DragEventArgs _)
+        {
+            if (GetDisabledState())
+            {
+                return Task.CompletedTask;
+            }
+
+            return _draggingState.SetValueAsync(true);
+        }
+
+        private Task OnFileChipCloseAsync(string filename)
+        {
+            if (GetDisabledState())
+            {
+                return Task.CompletedTask;
+            }
+
+            return RemoveFileAsync(filename);
+        }
 
         private int _numberOfActiveFileInputs = 1;
         private string? GetInputClass(int fileInputIndex) => fileInputIndex == _numberOfActiveFileInputs
-            ? InputClass
-            : $"{InputClass} d-none";
+            ? InputClasses
+            : $"{InputClasses} d-none";
         private string GetInputId(int fileInputIndex) => $"{_id}-{fileInputIndex}";
         private string GetActiveInputId() => $"{_id}-{_numberOfActiveFileInputs}";
 
+        /// <summary>
+        /// Removes the file with the specified name from <see cref="Files"/>.
+        /// </summary>
+        /// <remarks>
+        /// Applies when <c>T</c> is <see cref="IBrowserFile" /> or <see cref="IReadOnlyList{IBrowserFile}">IReadOnlyList&lt;IBrowserFile&gt;</see>.
+        /// </remarks>
+        /// <param name="filename">The name of the file to remove.</param>
+        public async Task RemoveFileAsync(string filename)
+        {
+            switch (_filesState.Value)
+            {
+                case IBrowserFile singleFile when singleFile.Name == filename:
+                    await _filesState.SetValueAsync(default); // Remove the single file by setting Files to null/default
+                    break;
+
+                case IReadOnlyList<IBrowserFile> fileList:
+                    var updatedList = fileList.Where(file => file.Name != filename).ToList();
+                    if (updatedList.Count == 0)
+                    {
+                        // When the last file is removed in multi-file mode, treat it as "no selection"
+                        await _filesState.SetValueAsync(default);
+                    }
+                    else
+                    {
+                        await _filesState.SetValueAsync((T)(object)updatedList); // Cast to T to update Files
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Clears the selected files and resets the internal file inputs.
+        /// </summary>
+        /// <remarks>
+        /// This also removes validation errors produced by file size checks.
+        /// </remarks>
         public async Task ClearAsync()
         {
             ValidationErrors.RemoveAll(_validationErrors.Contains);
@@ -205,18 +349,10 @@ namespace MudBlazor
         }
 
         /// <summary>
-        /// Opens the file picker.
+        /// Opens the native file picker for the active input.
         /// </summary>
         public async Task OpenFilePickerAsync()
             => await JsRuntime.InvokeVoidAsyncWithErrorHandling("mudFileUpload.openFilePicker", GetActiveInputId());
-
-        /// <summary>
-        /// Opens the file picker.
-        /// </summary>
-        /// <param name="activator">The object which raised the event.</param>
-        /// <param name="args">The coordinates of the mouse when clicked.</param>
-        public void Activate(object activator, MouseEventArgs args)
-            => _ = OpenFilePickerAsync();
 
         private async Task OnChangeAsync(InputFileChangeEventArgs args)
         {
@@ -330,6 +466,7 @@ namespace MudBlazor
             await ErrorTextState.SetValueAsync(ValidationErrors.FirstOrDefault());
         }
 
+        /// <inheritdoc />
         public override Task ResetValidationAsync()
         {
             _validationErrors.Clear();

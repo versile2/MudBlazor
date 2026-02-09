@@ -7,13 +7,14 @@
                            Files="_files"
                            FilesChanged="UpdateFilesAsync"
                            AppendMultipleFiles>
-                <ActivatorContent>
+                <CustomContent>
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.CloudUpload">
+                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                               OnClick="context.OpenFilePickerAsync">
                         Append files
                     </MudButton>
-                </ActivatorContent>
+                </CustomContent>
                 <SelectedTemplate>
                     @if (context?.Any() == true)
                     {
@@ -37,13 +38,14 @@
                            Files="_files"
                            FilesChanged="UpdateFilesAsync"
                            AppendMultipleFiles="false">
-                <ActivatorContent>
+                <CustomContent>
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.SwapHoriz">
+                               StartIcon="@Icons.Material.Filled.SwapHoriz"
+                               OnClick="context.OpenFilePickerAsync">
                         Replace selection
                     </MudButton>
-                </ActivatorContent>
+                </CustomContent>
                 <SelectedTemplate>
                     @if (context?.Any() == true)
                     {

@@ -7,8 +7,8 @@
             var dropzone = i.ToString();
             <MudPaper Class="ma-4 flex-grow-1">
                 <MudList T="string" Class="d-flex flex-column mud-height-full">
-                    <MudListSubheader>Drop Zone @dropzone</MudListSubheader>
-                    <MudDropZone T="DropItem" Identifier="@dropzone" Class="flex-grow-1" AllowReorder="true" />
+                    <MudListSubheader>Drop Zone @dropzone @((i == 1) ? "(Horizontal=true)" : string.Empty)</MudListSubheader>
+                    <MudDropZone T="DropItem" Identifier="@dropzone" Class="@((i == 1) ? "d-flex flex-row flex-wrap flex-grow-1" : "flex-grow-1")" AllowReorder="true" Horizontal="@(i == 1)" />
                 </MudList>
             </MudPaper>
         }

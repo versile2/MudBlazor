@@ -46,6 +46,7 @@ namespace MudBlazor.UnitTests.Components
             zone.NoDropClass.Should().BeNullOrEmpty();
             zone.OnlyZone.Should().BeFalse();
             zone.AllowReorder.Should().BeFalse();
+            zone.Horizontal.Should().BeFalse();
         }
 
         [Test]
@@ -1288,5 +1289,17 @@ namespace MudBlazor.UnitTests.Components
             var containerComponent = comp.FindComponent<MudDropContainer<DropzoneBasicTest.SimpleDropItem>>();
             containerComponent.Instance.GetTransactionOriginZoneIdentifier().Should().Be("Column 1");
         }
+        [Test]
+        public void DropZone_Reorder_HorizontalPreviewStartClass()
+        {
+            var comp = Context.Render<DropzoneHorizontalReorderTest>();
+
+            var horizontalDropZone = comp.Find(".mud-drop-zone");
+            var previewStart = horizontalDropZone.Children[1];
+
+            previewStart.ClassList.Should().Contain("mud-drop-item-preview-start");
+            previewStart.ClassList.Should().Contain("mud-drop-item-preview-start-horizontal");
+        }
+
     }
 }

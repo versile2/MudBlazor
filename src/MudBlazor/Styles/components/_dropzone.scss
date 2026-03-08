@@ -33,6 +33,11 @@
   left: 0;
   z-index: +1;
   user-select: none;
+
+  &.mud-drop-item-preview-start-horizontal {
+    height: 100%;
+    width: 20px;
+  }
 }
 
 .mud-drop-item {

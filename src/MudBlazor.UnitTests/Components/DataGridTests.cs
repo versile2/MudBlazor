@@ -570,6 +570,23 @@ namespace MudBlazor.UnitTests.Components
         }
 
         [Test]
+        public async Task DataGridCustomComparer_ShouldKeepVisualSelectionAfterItemsRefresh()
+        {
+            var comp = Context.Render<DataGridSelectionComparerRefreshTest>();
+            var dataGrid = comp.FindComponent<MudDataGrid<DataGridSelectionComparerRefreshTest.Person>>();
+
+            await dataGrid.FindAll("input[type=checkbox]")[1].ChangeAsync(true);
+
+            dataGrid.Instance.GetState(x => x.SelectedItems).Should().HaveCount(1);
+            dataGrid.FindAll("input[type=checkbox]").Count(checkbox => checkbox.IsChecked()).Should().Be(1);
+
+            await comp.InvokeAsync(() => comp.Instance.RefreshItems());
+
+            dataGrid.Instance.GetState(x => x.SelectedItems).Should().HaveCount(1);
+            dataGrid.FindAll("input[type=checkbox]").Count(checkbox => checkbox.IsChecked()).Should().Be(1);
+        }
+
+        [Test]
         public async Task DataGridSingleSelection()
         {
             var comp = Context.Render<DataGridSingleSelectionTest>();

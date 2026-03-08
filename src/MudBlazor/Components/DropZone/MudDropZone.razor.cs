@@ -172,6 +172,16 @@ namespace MudBlazor
         public bool AllowReorder { get; set; }
 
         /// <summary>
+        /// Displays reorder preview positions horizontally.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to <c>false</c>.
+        /// </remarks>
+        [Parameter]
+        [Category(CategoryTypes.DropZone.Behavior)]
+        public bool Horizontal { get; set; }
+
+        /// <summary>
         /// Allows this zone to only receive dropped items.
         /// </summary>
         /// <remarks>
@@ -267,6 +277,11 @@ namespace MudBlazor
         protected string PlaceholderClassname =>
             new CssBuilder("border-2 mud-border-primary border-dashed mud-chip-text mud-chip-color-primary pa-4 mud-dropitem-placeholder")
                 .AddClass("d-none", !AllowReorder || Container?.TransactionInProgress() == false || Container?.GetTransactionCurrentZoneIdentifier() != Identifier)
+                .Build();
+
+        protected string PreviewStartClassname =>
+            new CssBuilder("mud-drop-item-preview-start")
+                .AddClass("mud-drop-item-preview-start-horizontal", Horizontal)
                 .Build();
 
         #endregion

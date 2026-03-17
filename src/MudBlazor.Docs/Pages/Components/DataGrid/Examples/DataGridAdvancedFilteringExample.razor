@@ -1,111 +1,116 @@
-﻿@using System.Net.Http.Json
+@using System.Net.Http.Json
 @using MudBlazor.Examples.Data.Models
 @namespace MudBlazor.Docs.Examples
 @inject HttpClient httpClient
 
-<MudDataGrid T="Element" Items="@Elements" Filterable="true" FilterMode="@DataGridFilterMode.ColumnFilterRow">
+<MudDataGrid T="Element" Items="@_elements" Filterable="true" FilterMode="@_filterMode" RowsPerPage="5">
     <Columns>
         <PropertyColumn Property="x => x.Number" Title="Nr" Filterable="false" />
-        <PropertyColumn Property="x => x.Sign">
-            <FilterTemplate>
-                <MudIconButton OnClick="@OpenFilter" Icon="@_icon" Size="@Size.Small" />
-                <MudOverlay Visible="@_filterOpen" OnClick="@(() => _filterOpen = false)" />
-                <MudPopover Open="@_filterOpen" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter"
-                    Style="width:150px">
-		           <MudStack Spacing="0">
-                       <MudCheckBox T="bool" Label="Select All" Size="@Size.Small" Value="@_selectAll" ValueChanged="@SelectAll" />
-                       <MudStack Spacing="0" Style="overflow-y:auto;max-height:250px">
-                           @foreach (var item in context.Items)
-                           {
-                                <MudCheckBox T="bool" Label="@($"{item.Sign}")" Size="@Size.Small" Value="@(_selectedItems.Contains(item))"
-                                             ValueChanged="@((value) => SelectedChanged(value, item))" />
-                           }
-                       </MudStack>
-                       <MudStack Row="true">
-                            <MudButton OnClick="@(() => ClearFilterAsync(context))">Clear</MudButton>
-                            <MudButton Color="@Color.Primary" OnClick="@(() => ApplyFilterAsync(context))">Filter</MudButton>
-                       </MudStack>
-                   </MudStack>
-	            </MudPopover>
-            </FilterTemplate>
-        </PropertyColumn>
+        <PropertyColumn Property="x => x.Sign" />
         <PropertyColumn Property="x => x.Name" />
         <PropertyColumn Property="x => x.Position" />
         <PropertyColumn Property="x => x.Molar" Title="Molar mass" />
-        <PropertyColumn Property="x => x.Group" Title="Category" />
+        <PropertyColumn Property="x => x.Group" Title="Category">
+            <FilterTemplate Context="filterContext">
+                <MudStack Row Spacing="1" Style="width: 100%">
+                    <MudToggleGroup T="CategoryFilterMode"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Size="Size.Small"
+                                    Value="@GetFilterMode(filterContext.FilterDefinition!)"
+                                    ValueChanged="@(mode => SetFilterModeAsync(filterContext, mode))">
+                        <MudToggleItem Value="@CategoryFilterMode.Include">Include</MudToggleItem>
+                        <MudToggleItem Value="@CategoryFilterMode.Exclude">Exclude</MudToggleItem>
+                    </MudToggleGroup>
+                    <MudSelect T="string" MultiSelection="true"
+                               SelectedValues="@GetFilterValues(filterContext.FilterDefinition!)"
+                               SelectedValuesChanged="@(values => SetFilterValues(filterContext, values))"
+                               FullWidth="true" Dense="true" Margin="@Margin.Dense"
+                               Label="Value" Clearable="true" Placeholder="Select categories">
+                        @foreach (var category in _categories)
+                        {
+                            <MudSelectItem T="string" Value="@category">@category</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            </FilterTemplate>
+        </PropertyColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Element" />
     </PagerContent>
 </MudDataGrid>
 
-@code {
-    IEnumerable<Element> Elements = new List<Element>();
-    HashSet<Element> _selectedItems = new();
-    HashSet<Element> _filterItems = new();
-    FilterDefinition<Element> _filterDefinition;
-    bool _selectAll = true;
-    string _icon = Icons.Material.Outlined.FilterAlt;
+<div class="d-flex flex-wrap mt-4">
+    <MudRadioGroup T="DataGridFilterMode" @bind-Value="_filterMode">
+        <MudRadio Dense="true" Value="@DataGridFilterMode.ColumnFilterMenu" Color="Color.Primary">Column Menu</MudRadio>
+        <MudRadio Dense="true" Value="@DataGridFilterMode.ColumnFilterRow">Column Row</MudRadio>
+    </MudRadioGroup>
+</div>
 
-    bool _filterOpen = false;
+@code {
+    private IEnumerable<Element> _elements = new List<Element>();
+    private readonly List<string> _categories = new();
+    private DataGridFilterMode _filterMode = DataGridFilterMode.ColumnFilterMenu;
+
+    private enum CategoryFilterMode
+    {
+        Include,
+        Exclude
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        Elements = await httpClient.GetFromJsonAsync<List<Element>>("webapi/periodictable");
-        _selectedItems = Elements.ToHashSet();
-        _filterItems = Elements.ToHashSet();
-        _filterDefinition = new FilterDefinition<Element>
+        _elements = await httpClient.GetFromJsonAsync<List<Element>>("webapi/periodictable") ?? new List<Element>();
+        _categories.AddRange(_elements.Select(x => x.Group).Distinct().OrderBy(x => x).ToList());
+    }
+
+    private static IReadOnlyCollection<string> GetFilterValues(IFilterDefinition<Element> filterDefinition)
+    {
+        return filterDefinition.Value as IReadOnlyCollection<string> ?? Array.Empty<string>();
+    }
+
+    private static CategoryFilterMode GetFilterMode(IFilterDefinition<Element> filterDefinition) =>
+        filterDefinition.Operator switch
         {
-            FilterFunction = x => _filterItems.Contains(x)
+            nameof(CategoryFilterMode.Exclude) => CategoryFilterMode.Exclude,
+            _ => CategoryFilterMode.Include
         };
+
+    private async Task SetFilterModeAsync(FilterContext<Element> filterContext, CategoryFilterMode mode)
+    {
+        var filterDefinition = filterContext.FilterDefinition!;
+        filterDefinition.Operator = mode.ToString();
+        UpdateFilterDefinition(filterDefinition);
+        await filterContext.Actions.ApplyFilterAsync(filterDefinition);
     }
 
-    void OpenFilter()
+    private async Task SetFilterValues(FilterContext<Element> filterContext, IEnumerable<string> values)
     {
-        _filterOpen = true;
+        var filterDefinition = filterContext.FilterDefinition!;
+        var selectedValues = values?.ToList() ?? [];
+        filterDefinition.Value = selectedValues.Count > 0 ? selectedValues : null;
+        UpdateFilterDefinition(filterDefinition);
+        await filterContext.Actions.ApplyFilterAsync(filterDefinition);
     }
 
-    private void SelectedChanged(bool value, Element item)
+    private static void UpdateFilterDefinition(IFilterDefinition<Element> filterDefinition)
     {
-        if (value)
-            _selectedItems.Add(item);
-        else
-            _selectedItems.Remove(item);
-
-        if (_selectedItems.Count == Elements.Count())
-            _selectAll = true;
-        else
-            _selectAll = false;
-    }
-
-    private async Task ClearFilterAsync(FilterContext<Element> context)
-    {
-        _selectedItems = Elements.ToHashSet();
-        _filterItems = Elements.ToHashSet();
-        _icon = Icons.Material.Outlined.FilterAlt;
-        await context.Actions.ClearFilterAsync(_filterDefinition);
-        _filterOpen = false;
-    }
-
-    private async Task ApplyFilterAsync(FilterContext<Element> context)
-    {
-        _filterItems = _selectedItems.ToHashSet();
-        _icon = _filterItems.Count == Elements.Count() ? Icons.Material.Outlined.FilterAlt : Icons.Material.Filled.FilterAlt;
-        await context.Actions.ApplyFilterAsync(_filterDefinition);
-        _filterOpen = false;
-    }
-
-    private void SelectAll(bool value)
-    {
-        _selectAll = value;
-
-        if (value)
+        if (filterDefinition is not FilterDefinition<Element> filterDef)
         {
-            _selectedItems = Elements.ToHashSet();
+            return;
         }
-        else
+
+        var selectedValues = GetFilterValues(filterDefinition);
+        if (selectedValues.Count == 0)
         {
-            _selectedItems.Clear();
+            filterDef.FilterFunction = null;
+            return;
         }
+
+        filterDef.FilterFunction = GetFilterMode(filterDefinition) switch
+        {
+            CategoryFilterMode.Exclude => item => !selectedValues.Contains(item.Group),
+            _ => item => selectedValues.Contains(item.Group)
+        };
     }
 }

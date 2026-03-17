@@ -1,0 +1,125 @@
+﻿<MudPopoverProvider />
+
+<MudDataGrid Items="@_items" Filterable="true" FilterMode="@_filterMode" RowsPerPage="5">
+    <Columns>
+        <PropertyColumn Property="x => x.Name" Filterable="false" />
+        <PropertyColumn Property="x => x.Age" Filterable="false" />
+        <PropertyColumn Property="x => x.Department">
+            <FilterTemplate Context="filterContext">
+                <MudStack Row Spacing="1" Style="width: 100%">
+                    <MudToggleGroup T="DepartmentFilterMode"
+                                    SelectionMode="SelectionMode.SingleSelection"
+                                    Value="@GetFilterMode(filterContext.FilterDefinition)"
+                                    ValueChanged="@(mode => SetFilterModeAsync(filterContext, mode))"
+                                    Class="filter-operator">
+                        <MudToggleItem Value="@DepartmentFilterMode.Include">Include</MudToggleItem>
+                        <MudToggleItem Value="@DepartmentFilterMode.Exclude">Exclude</MudToggleItem>
+                    </MudToggleGroup>
+                    <MudSelect T="string" MultiSelection="true"
+                               SelectedValues="@GetFilterValues(filterContext.FilterDefinition)"
+                               SelectedValuesChanged="@(values => SetFilterValues(filterContext, values))"
+                               FullWidth="true" Dense="true" Margin="@Margin.Dense"
+                               Class="filter-input department-filter"
+                               Label="Value" Clearable="true">
+                        @foreach (var dept in _departments)
+                        {
+                            <MudSelectItem T="string" Value="@dept">@dept</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            </FilterTemplate>
+        </PropertyColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Model" />
+    </PagerContent>
+</MudDataGrid>
+
+<div class="d-flex flex-wrap mt-4">
+    <MudRadioGroup T="DataGridFilterMode" @bind-Value="_filterMode">
+        <MudRadio Dense="true" Value="@DataGridFilterMode.Simple" Color="Color.Primary">Simple</MudRadio>
+        <MudRadio Dense="true" Value="@DataGridFilterMode.ColumnFilterMenu" Color="Color.Tertiary">Column Menu</MudRadio>
+        <MudRadio Dense="true" Value="@DataGridFilterMode.ColumnFilterRow">Column Row</MudRadio>
+    </MudRadioGroup>
+</div>
+
+@code {
+    [Parameter]
+    public DataGridFilterMode FilterMode { get; set; } = DataGridFilterMode.Simple;
+
+    public record Model(string Name, int Age, string Department);
+
+    private enum DepartmentFilterMode
+    {
+        Include,
+        Exclude
+    }
+
+    private readonly List<Model> _items =
+    [
+        new("Sam", 30, "Engineering"),
+        new("Alicia", 25, "Marketing"),
+        new("Ira", 27, "Engineering"),
+        new("John", 32, "Sales"),
+        new("Mara", 29, "Support"),
+        new("Theo", 34, "Sales")
+    ];
+
+    private readonly List<string> _departments = ["Engineering", "Marketing", "Sales", "Support"];
+    private DataGridFilterMode _filterMode = DataGridFilterMode.Simple;
+
+    protected override void OnParametersSet()
+    {
+        _filterMode = FilterMode;
+    }
+
+    private static IReadOnlyCollection<string> GetFilterValues(IFilterDefinition<Model> filterDefinition)
+    {
+        return filterDefinition.Value as IReadOnlyCollection<string> ?? Array.Empty<string>();
+    }
+
+    private static DepartmentFilterMode GetFilterMode(IFilterDefinition<Model> filterDefinition) =>
+        filterDefinition.Operator switch
+        {
+            nameof(DepartmentFilterMode.Exclude) => DepartmentFilterMode.Exclude,
+            _ => DepartmentFilterMode.Include
+        };
+
+    private async Task SetFilterModeAsync(FilterContext<Model> filterContext, DepartmentFilterMode mode)
+    {
+        var filterDefinition = filterContext.FilterDefinition!;
+        filterDefinition.Operator = mode.ToString();
+        UpdateFilterDefinition(filterDefinition);
+        await filterContext.Actions.ApplyFilterAsync(filterDefinition);
+    }
+
+    private async Task SetFilterValues(FilterContext<Model> filterContext, IEnumerable<string> values)
+    {
+        var filterDefinition = filterContext.FilterDefinition!;
+        var selectedValues = values?.ToList() ?? [];
+        filterDefinition.Value = selectedValues.Count > 0 ? selectedValues : null;
+        UpdateFilterDefinition(filterDefinition);
+        await filterContext.Actions.ApplyFilterAsync(filterDefinition);
+    }
+
+    private static void UpdateFilterDefinition(IFilterDefinition<Model> filterDefinition)
+    {
+        if (filterDefinition is not FilterDefinition<Model> filterDef)
+        {
+            return;
+        }
+
+        var selectedValues = GetFilterValues(filterDefinition);
+        if (selectedValues.Count == 0)
+        {
+            filterDef.FilterFunction = null;
+            return;
+        }
+
+        filterDef.FilterFunction = GetFilterMode(filterDefinition) switch
+        {
+            DepartmentFilterMode.Exclude => item => !selectedValues.Contains(item.Department),
+            _ => item => selectedValues.Contains(item.Department)
+        };
+    }
+}

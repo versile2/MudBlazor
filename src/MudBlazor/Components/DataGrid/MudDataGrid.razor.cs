@@ -158,6 +158,12 @@ namespace MudBlazor
         protected override void OnParametersSet()
         {
             base.OnParametersSet();
+
+            if (Comparer is not null && !ReferenceEquals(Selection.Comparer, Comparer))
+            {
+                Selection = new HashSet<T>(Selection, Comparer);
+            }
+
             if (Items != null)
             {
                 if (ServerData != null)
